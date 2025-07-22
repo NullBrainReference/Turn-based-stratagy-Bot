@@ -6,11 +6,6 @@ using UnityEngine;
 
 public class BotVariansGenerator
 {
-    //private List<ShortMoveModel> testLine;
-    //private List<List<ShortMoveModel>> lines;
-    //private ShortFieldModel[] fields;
-    //private BotFieldModel _botFieldModel;
-
     private bool calculated = false;
     private bool pushed = false;
     private bool failed = false;
@@ -21,6 +16,8 @@ public class BotVariansGenerator
     private int maxHealthLose = 0;
 
     private ShortFieldModel[] tmpFields;
+    private List<ShortFieldModel> newFields;
+    private List<ShortMoveModel> moveVariants;
 
     public bool Pushed => pushed;
     public bool Calculated => calculated;
@@ -37,15 +34,17 @@ public class BotVariansGenerator
         ShortFieldModel shortFieldModel, MoveFilter[] filters, ShortMoveModel[] redMoves = null, bool saveAllCost = false)
     {
         calculated = false;
+        newFields = new List<ShortFieldModel>();
+        moveVariants = new List<ShortMoveModel>();
 
         //ShortFieldModel shortFieldModel = new ShortFieldModel(whiteUnits, redUnits, botFieldModel.Models);
 
         //======================================= 1 
 
         GetNextFields(redMoves == null ? 
-            shortFieldModel.GetMoves(Team.White, filters[0], saveAllCost) : 
-            shortFieldModel.GetMoves(Team.White), shortFieldModel);
-        Debug.Log($"_bot gen filter0 fields count = {tmpFields.Length}");
+            shortFieldModel.GetMoves(Team.White, filters[0], saveAllCost, moveVariants) : 
+            shortFieldModel.GetMoves(Team.White, moveVariants), shortFieldModel);
+        //Debug.Log($"_bot gen filter0 fields count = {tmpFields.Length}");
         if (tmpFields.Length == 0)
         {
             failed = true;
@@ -60,7 +59,7 @@ public class BotVariansGenerator
 
         maxHealthLose = LeaderMaxHealthLose(Team.White);
 
-        Debug.Log($"_bot gen filter0_1 fields count = {tmpFields.Length}");
+        //Debug.Log($"_bot gen filter0_1 fields count = {tmpFields.Length}");
         //======================================= 2
         GetNextFilterMoves(Team.White, filters[1], redMoves != null, saveAllCost);
         if (tmpFields.Length == 0)
@@ -94,9 +93,12 @@ public class BotVariansGenerator
             maxHealthLose *= 2;
         }
 
-        Debug.Log($"_Bot gen filter fields count {tmpFields.Length}");
+        //Debug.Log($"_Bot gen filter fields count {tmpFields.Length}");
 
         calculated = true;
+        newFields = null;
+        moveVariants.Clear();
+        moveVariants = null;
 
         //Console.Log($"_Bot gen item_takes fields count {tmpFields.Length}");
 
@@ -236,22 +238,23 @@ public class BotVariansGenerator
         }
     }
 
-    public List<ShortMoveModel> GetNextFilterMoves(
+    public void GetNextFilterMoves(
         Team team, MoveFilter filter, bool ignore = false, bool allowOfcenter = false)
     {
-        var result = new List<ShortMoveModel>();
-        var newFields = new List<ShortFieldModel>();
+        //var newFields = new List<ShortFieldModel>();
+        newFields.Clear();
 
         int variantsCount = 0;
 
         for (int i = 0; i < tmpFields.Length; i++)
         {
-            var moves = ignore == false ? tmpFields[i].GetMoves(team, filter, allowOfcenter) : tmpFields[i].GetMoves(team);
+            var moves = ignore == false ? 
+                tmpFields[i].GetMoves(team, filter, allowOfcenter, moveVariants) : 
+                tmpFields[i].GetMoves(team, moveVariants);
             variantsCount += moves.Count;
 
             for (int j = 0; j < moves.Count; j++)
             {
-                result.Add(moves[j]);
                 var tmp = tmpFields[i].GetNext(moves[j]);
 
                 newFields.Add(tmp);
@@ -265,26 +268,23 @@ public class BotVariansGenerator
         {
             tmpFields[i] = newFields[i];
         }
-
-        return result;
     }
 
-    public List<ShortMoveModel> GetNextMoves(
+    public void GetNextMoves(
         Team team, bool afterMath = false, bool sort = false, int filter = 2, UnitModel mover = null)
     {
-        var result = new List<ShortMoveModel>();
-        var newFields = new List<ShortFieldModel>();
+        newFields.Clear();
+        //var newFields = new List<ShortFieldModel>();
 
         int variantsCount = 0;
 
         for (int i = 0; i < tmpFields.Length; i++)
         {
-            var moves = tmpFields[i].GetMoves(team, mover);
+            var moves = tmpFields[i].GetMoves(team, moveVariants, mover);
             variantsCount += moves.Count;
         
             for (int j = 0; j < moves.Count; j++)
             {
-                result.Add(moves[j]);
                 var tmp = tmpFields[i].GetNext(moves[j]);
 
                 if (afterMath)
@@ -315,14 +315,11 @@ public class BotVariansGenerator
         {
             tmpFields[i] = newFields[i];
         }
-
-        return result;
     }
 
-    public List<ShortMoveModel> GetNextMoves(
+    public void GetNextMoves(
         Team team, ShortMoveModel move, bool afterMath = false)
     {
-        var result = new List<ShortMoveModel>() { move };
 
         for (int i = 0; i < tmpFields.Length; i++)
         {
@@ -330,8 +327,6 @@ public class BotVariansGenerator
             if (afterMath)
                 tmpFields[i].AfterMath();
         }
-
-        return result;
     }
 
     private bool IsLeaderDead(Team team)

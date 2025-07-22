@@ -102,27 +102,27 @@ public class BotUnitPersonality: IBotDanger, IMoveFilerSource
 
             filter.Priority = 2;
         }
-        else if (unitModel.Health < unitModel.TrueHealth && unitModel.IsCharged)
+        else if (unitModel.Health < unitModel.TrueHealth && unitModel.IsCharged) //TODO: Uncomment if charge required to heal
         {
             var filter = new MoveFilter(unitModel, x => x.MoveType == MoveType.Respawn, unitModel);
             moveFilters.Add(filter);
 
             filter.Priority = 2;
         }
-        
+        //TODO: Uncomment if charge required to heal
         if (unitModel.Health < unitModel.TrueHealth && unitModel.IsLeader && unitModel.IsCharged)
         {
             var moveTile = unitModel.Position.MoveTiles.Find(x => x.IsBestChargeOption(unitModel.Position));
-
+        
             var filter = new MoveFilter(unitModel, x => 
                 x.MoveType == MoveType.Move &&
                 x.Tile == moveTile, 
                 moveTile);
-
+        
             moveFilters.Add(filter);
-
+        
             filter.Priority = -1;
-
+        
             var followup = new MoveFilter(unitModel, x => x.MoveType == MoveType.Respawn, unitModel);
             filter.Followup = followup;
         }

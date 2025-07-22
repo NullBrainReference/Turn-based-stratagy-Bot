@@ -20,12 +20,12 @@ public struct ShortFieldModel
         whiteModels = new ShortUnitModel[whiteUnits.Count];
         redModels = new ShortUnitModel[redUnits.Count];
 
-        for (int i = 0; i < whiteModels.Length; i++)
+        for (int i = 0; i < whiteUnits.Count; i++)
         {
             whiteModels[i] = new ShortUnitModel(
                 BotUnitPersonality.GetUnitPersonality(whiteUnits[i].UnitType),
                 whiteUnits[i]);
-
+        
             redModels[i] = new ShortUnitModel(
                 BotUnitPersonality.GetUnitPersonality(redUnits[i].UnitType),
                 redUnits[i]);
@@ -108,22 +108,36 @@ public struct ShortFieldModel
         int moverIndex = GetUnitModelIndex(move.Unit);
 
         if (move.Unit.Team == Team.White)
-            next.whiteModels[moverIndex].Move();
+        {
+            ref ShortUnitModel mover = ref next.whiteModels[moverIndex];
+            mover.Move();
+            //next.whiteModels[moverIndex].Move();
+        }
         else
-            next.redModels[moverIndex].Move();
+        {
+            ref ShortUnitModel mover = ref next.redModels[moverIndex];
+            mover.Move();
+            //next.redModels[moverIndex].Move();
+        }
 
         return next;
     }
 
-    private ShortUnitModel GetUnitModel(UnitModel unit)
+    private ref ShortUnitModel GetUnitModel(UnitModel unit)
     {
         var teamArray = unit.Team == Team.White ? whiteModels : redModels;
 
-        foreach (var model in teamArray)
+        for (int i = 0; i < teamArray.Length; i++)
+        {
+            ref ShortUnitModel model = ref teamArray[i];
             if (model.IsModelOf(unit))
-                return model;
+                return ref model;
+        }
+        //foreach (var model in teamArray)
+        //    if (model.IsModelOf(unit))
+        //        return ref model;
 
-        return teamArray[0];
+        return ref teamArray[0];
     }
 
     public int GetPosWeight(Team team)
@@ -132,406 +146,41 @@ public struct ShortFieldModel
 
         return 0; //TODO Test and if fine remove method;
 
-        //ShortUnitModel leaderW = whiteModels[0];
-        //ShortUnitModel leaderR = redModels[0];
-        //
-        //int leaderAfterDmgW = 0;
-        //int leaderAfterDmgR = 0;
-        //
-        //for (int i = 0; i < whiteModels.Length; i++)
-        //{
-        //    if (whiteModels[i].IsLeader)
-        //    {
-        //        leaderW = whiteModels[i];
-        //        if (whiteModels[i].IsDead)
-        //            weight += team == Team.White ? -1000 : 1000;
-        //        else
-        //            weight += team == Team.White ? whiteModels[i].Health * 32 : -whiteModels[i].Health * 32;
-        //
-        //        if (whiteModels[i].HasShield) {
-        //            weight += team == Team.White ? 40 : -4;
-        //
-        //            if (lastId <= 2)
-        //            {
-        //                weight += team == Team.White ? 40 : 0;
-        //            }
-        //        }
-        //            
-        //
-        //        if (shortField[whiteModels[i].Pos.x, whiteModels[i].Pos.y].Tile.IsSuddenDeathTarget)
-        //            weight += team == Team.White ? -16 : 8;
-        //
-        //        if (shortField[leaderW.Pos.x, leaderW.Pos.y].Tile.HasEnemyInRange(
-        //            leaderW.Unit, UnitType.MeleeMaster, true))
-        //            weight += team == Team.White ? -20 : 4;
-        //        if (shortField[leaderW.Pos.x, leaderW.Pos.y].Tile.HasEnemyInRange(
-        //            leaderW.Unit, UnitType.MeleeMaster, false))
-        //        {
-        //            if (leaderW.HasShield)
-        //                weight += team == Team.White ? -4 : 4;
-        //            else
-        //                weight += team == Team.White ? -18 : 4;
-        //        }
-        //
-        //    }
-        //    else
-        //    {
-        //        if (whiteModels[i].IsDead)
-        //        {
-        //            weight += team == Team.White ? -28 : 28;
-        //            leaderAfterDmgW++;
-        //        }
-        //        else
-        //        {
-        //            weight += team == Team.White ? whiteModels[i].Health * 18 : -whiteModels[i].Health * 18;
-        //        }
-        //
-        //        if (whiteModels[i].Personality.UnitType != UnitType.Default)
-        //        {
-        //            weight += team == Team.White ? 24 : -3;
-        //            if (whiteModels[i].Personality.UnitType == UnitType.Poison)
-        //            {
-        //                if (team == Team.White)
-        //                    weight += 10;
-        //
-        //                if (whiteModels[i].HasShield)
-        //                    weight += team == Team.White ? 2 : -3;
-        //                if (whiteModels[i].IsCharged)
-        //                    weight += team == Team.White ? 6 : -1;
-        //                if (shortField[whiteModels[i].Pos.x, whiteModels[i].Pos.y].Tile.HasEnemyInRange(
-        //                    whiteModels[i].Unit, UnitType.DefaultLeader, true))
-        //                    weight += team == Team.White ? 8 : 0;
-        //
-        //                if (shortField[whiteModels[i].Pos.x, whiteModels[i].Pos.y].Tile.HasEnemyInRange(
-        //                    whiteModels[i].Unit, false))
-        //                {
-        //                    if (whiteModels[i].IsCharged)
-        //                        weight += team == Team.White ? 36 : 0;
-        //                    else
-        //                        weight += team == Team.White ? 2 : 0;
-        //                }
-        //
-        //                if (lastId >= 5)
-        //                {
-        //                    if (shortField[whiteModels[i].Pos.x, whiteModels[i].Pos.y].Tile.IsPortal)
-        //                        weight += team == Team.White ? 36 : 0;
-        //                }
-        //                else
-        //                {
-        //                    if (shortField[whiteModels[i].Pos.x, whiteModels[i].Pos.y].Tile.IsPortal)
-        //                        weight += team == Team.White ? 8 : 0;
-        //                }
-        //            }
-        //        }
-        //
-        //        if (tookItem == Team.White)
-        //        {
-        //            if (item == ItemType.SleepDmg)
-        //            {
-        //                if (whiteModels[i].Moved == false)
-        //                    leaderAfterDmgR++;
-        //            }
-        //            else if (item == ItemType.SleepHP)
-        //            {
-        //                if (whiteModels[i].Moved == false)
-        //                    leaderAfterDmgW--;
-        //            }
-        //        }
-        //    }
-        //
-        //    weight += team == Team.White ? -whiteModels[i].Xofcenter - whiteModels[i].YofCenter : 0;
-        //    if (whiteModels[i].Unit.UnitType == UnitType.Poison)
-        //        weight += team == Team.White ? -whiteModels[i].Xofcenter - whiteModels[i].YofCenter : 0;
-        //
-        //    if (whiteModels[i].IsCharged)
-        //        weight += team == Team.White ? 8 : -1;
-        //    else if (shortField[whiteModels[i].Pos.x, whiteModels[i].Pos.y].Tile.ChargeStage == 1)
-        //        weight += team == Team.White ? 2 : 0;
-        //
-        //    if (shortField[whiteModels[i].Pos.x, whiteModels[i].Pos.y].Tile.IsSuddenDeathTarget)
-        //    {
-        //        weight += team == Team.White ? -12 : 3;
-        //        if (whiteModels[i].Health == 1)
-        //            leaderAfterDmgW++;
-        //    }
-        //
-        //    if (redModels[i].IsLeader)
-        //    {
-        //        leaderR = redModels[i];
-        //        if (redModels[i].IsDead)
-        //            weight += team == Team.Red ? -1000 : 1000;
-        //        else
-        //            weight += team == Team.Red ? redModels[i].Health * 32 : -redModels[i].Health * 32;
-        //
-        //        if (redModels[i].IsPoisoned)
-        //        {
-        //            weight += team == Team.Red ? -72 : 72;
-        //            if (lastId <= 2)
-        //            {
-        //                weight += team == Team.Red ? 0 : 72;
-        //            }
-        //        }
-        //
-        //        if (redModels[i].HasShield)
-        //            weight += team == Team.Red ? 40 : -4;
-        //
-        //        if (shortField[leaderR.Pos.x, leaderR.Pos.y].Tile.HasEnemyInRange(
-        //            leaderR.Unit, UnitType.Poison, true))
-        //            weight += team == Team.Red ? -20 : 2;
-        //
-        //    }
-        //    else
-        //    {
-        //        if (redModels[i].IsDead)
-        //        {
-        //            weight += team == Team.Red ? -24 : 24;
-        //            leaderAfterDmgR++;
-        //        }
-        //        else
-        //        {
-        //            weight += team == Team.Red ? redModels[i].Health * 18 : -redModels[i].Health * 18;
-        //        }
-        //
-        //        if (redModels[i].IsPoisoned)
-        //            weight += team == Team.Red ? -10 : 16;
-        //
-        //        if (redModels[i].Personality.UnitType != UnitType.Default)
-        //            weight += team == Team.Red ? 16 : -4;
-        //
-        //        if (tookItem == Team.Red)
-        //        {
-        //            if (item == ItemType.SleepDmg)
-        //            {
-        //                if (redModels[i].Moved == false)
-        //                    leaderAfterDmgW++;
-        //            }
-        //            else if (item == ItemType.SleepHP)
-        //            {
-        //                if (redModels[i].Moved == false)
-        //                    leaderAfterDmgR--;
-        //            }
-        //        }
-        //    }
-        //
-        //    weight += team == Team.Red ? -redModels[i].Xofcenter - redModels[i].YofCenter : 0;
-        //    if (redModels[i].Unit.UnitType == UnitType.MeleeMaster)
-        //    {
-        //        weight += team == Team.Red ? -redModels[i].Xofcenter - redModels[i].YofCenter : 0;
-        //        weight += team == Team.Red ? 4 : -2;
-        //    }
-        //
-        //    if (redModels[i].IsCharged)
-        //        weight += team == Team.Red ? 8 : -1;
-        //    else if (shortField[redModels[i].Pos.x, redModels[i].Pos.y].Tile.ChargeStage == 1)
-        //        weight += team == Team.Red ? 2 : 0;
-        //
-        //    if (shortField[redModels[i].Pos.x, redModels[i].Pos.y].Tile.IsSuddenDeathTarget)
-        //    {
-        //        weight += team == Team.Red ? -8 : 3;
-        //        if (redModels[i].Health == 1)
-        //            leaderAfterDmgR++;
-        //    }
-        //
-        //}
-        //
-        ////rnd value Shift;
-        ////weight += Random.Range(-1, 2);
-        //
-        //if (lastId >= 5)
-        //{
-        //    if (team == Team.White)
-        //    {
-        //        for (int i = 0; i < movesHistory.Length; i += 2)
-        //        {
-        //            if (movesHistory[i].MoveType == MoveType.Attack)
-        //            {
-        //                if (Mathf.Abs(movesHistory[i].Tile.Xcoord - movesHistory[i].Target.Position.Xcoord) >= 2 ||
-        //                    Mathf.Abs(movesHistory[i].Tile.Ycoord - movesHistory[i].Target.Position.Ycoord) >= 2)
-        //                    weight += -120;
-        //
-        //                else if (
-        //                    Mathf.Abs(movesHistory[i].Tile.Xcoord - movesHistory[i].TileFrom.Xcoord) >= 2 ||
-        //                    Mathf.Abs(movesHistory[i].Tile.Ycoord - movesHistory[i].TileFrom.Ycoord) >= 2)
-        //                    if (item != ItemType.Range && tookItem != Team.White)
-        //                        weight += -80;
-        //
-        //            }
-        //        }
-        //
-        //        if (RevealLocalUtil.Instance.Order > 1)
-        //        {
-        //            if (RevealLocalUtil.Instance.Order == 2)
-        //            {
-        //
-        //                if (movesHistory[2].MoveType == MoveType.Attack)
-        //                {
-        //                    //bool hasNoEscape = false;
-        //                    //for (int i = 0; i < redModels.Length; i++)
-        //                    //{
-        //                    //    if (whiteModels[i].Unit.UnitType == UnitType.Poison)
-        //                    //    {
-        //                    //        if (HasNoEscape(leaderR.Unit, shortField[whiteModels[i].Pos.x, whiteModels[i].Pos.y].Tile))
-        //                    //        {
-        //                    //            hasNoEscape = true;
-        //                    //            break;
-        //                    //        }
-        //                    //    }
-        //                    //}
-        //                    //
-        //                    //if (hasNoEscape == false)
-        //                    weight -= 20; //100;
-        //                }
-        //            }
-        //            else if (RevealLocalUtil.Instance.Order == 3)
-        //            {
-        //                if (movesHistory[4].MoveType == MoveType.Attack)
-        //                    weight -= 100;
-        //
-        //                if (movesHistory[4].Unit.IsLeader)
-        //                    weight -= 60;
-        //            }
-        //
-        //            //for (int i = 0; i <= 4; i += 2)
-        //            //{
-        //            //    if (movesHistory[i].MoveType == MoveType.Attack)
-        //            //        if (RevealLocalUtil.Instance.Order == i / 2)
-        //            //            weight -= 250;
-        //            //}
-        //        }
-        //
-        //        if (leaderW.Moved == false)
-        //            weight -= 30;
-        //    }
-        //    else
-        //    {
-        //        if (leaderR.Moved == false)
-        //            weight -= 30;
-        //    }
-        //}
-        ////else if (lastId <= 1)
-        ////{
-        ////    if (movesHistory[0].MoveType == MoveType.Attack)
-        ////    {
-        ////        
-        ////    }
-        ////}
-        //else if (lastId <= 2)//first Move Case
-        //{
-        //    if (movesHistory[0].MoveType == MoveType.Attack)
-        //        weight += team == Team.White ? 10 : 0;
-        //
-        //    if (team == Team.White)
-        //    {
-        //        if (movesHistory[0].MoveType == MoveType.Ability)
-        //        {
-        //            if (movesHistory[0].Target.IsLeader)
-        //            {
-        //                if (movesHistory[0].Target.Health <= 2)
-        //                    weight += 100;
-        //                if (movesHistory[0].Target.Health <= 1)
-        //                    weight += 200;
-        //            }
-        //        }
-        //    }
-        //
-        //    for (int i = 0; i < whiteModels.Length; i++)
-        //    {
-        //        if (whiteModels[i].Unit.UnitType == UnitType.Poison)
-        //        {
-        //            if (HasNoEscape(leaderR.Unit, shortField[whiteModels[i].Pos.x, whiteModels[i].Pos.y].Tile))
-        //            {
-        //                weight += team == Team.White ? 180 : 0;
-        //
-        //                if (movesHistory[0].MoveType == MoveType.Attack)
-        //                {
-        //                    if (movesHistory[0].Target.IsLeader)
-        //                        weight += team == Team.White ? 200 : 0;
-        //                }
-        //                else if (shortField[whiteModels[i].Pos.x, whiteModels[i].Pos.y].Tile != whiteModels[i].Unit.Position)
-        //                {
-        //
-        //                    if (lastId <= 3)
-        //                    {
-        //                        if (HasNoEscape(leaderR.Unit, whiteModels[i].Unit.Position) == false)
-        //                        {
-        //                            if (whiteModels[i].IsCharged)
-        //                                weight += 10000;
-        //                        }
-        //                    }
-        //                }
-        //            }
-        //            else if (movesHistory[0].MoveType == MoveType.Attack)
-        //            {
-        //                weight += team == Team.White ? 10 : 0;
-        //            }
-        //
-        //            weight += 
-        //                shortField[whiteModels[i].Pos.x, whiteModels[i].Pos.y].Tile.GetEnemyTiles(whiteModels[i].Unit).Count * 10;
-        //
-        //
-        //            if (item != ItemType.Empty)
-        //            {
-        //                if (item == ItemType.Range)
-        //                {
-        //                    if (whiteModels[i].IsCharged)
-        //                    {
-        //                        if (whiteModels[i].Pos.x == 2 && whiteModels[i].Pos.y == 2)
-        //                            weight += team == Team.White ? 100 : 0;
-        //                    }
-        //                }
-        //            }
-        //        }
-        //
-        //        if (item != ItemType.Empty)
-        //        {
-        //            if (tookItem == Team.White)
-        //                weight += team == Team.White ? 8 : 0;
-        //        }
-        //    }
-        //}
-        //
-        //weight += team == Team.White ?
-        //    ((leaderW.Health - leaderAfterDmgW) - (leaderR.Health - leaderAfterDmgR)) * 16 :
-        //    ((leaderR.Health - leaderAfterDmgR) - (leaderW.Health - leaderAfterDmgW)) * 16;
-        //
-        //return weight;
+        
     }
 
 
     public int LeaderHealthLose(Team team)
     {
-        if (team == Team.White)
-        {
-            return whiteModels[2].Unit.Health - whiteModels[2].Health;
-        }
-        else
-        {
-            return redModels[2].Unit.Health - redModels[2].Health;
-        }
+        var models = team == Team.White ? whiteModels : redModels;
+        ref ShortUnitModel leader = ref models[2];
+
+        return leader.Unit.Health - leader.Health;
+
+        //if (team == Team.White)
+        //{
+        //    return whiteModels[2].Unit.Health - whiteModels[2].Health;
+        //}
+        //else
+        //{
+        //    return redModels[2].Unit.Health - redModels[2].Health;
+        //}
     }
 
     public bool IsLeaderDead(Team team)
     {
-        if (team == Team.White)
-        {
-            return whiteModels[2].IsDead;
-        }
-        else
-        {
-            return redModels[2].IsDead;
-        }
+        var models = team == Team.White ? whiteModels : redModels;
+        ref ShortUnitModel leader = ref models[2];
+
+        return leader.IsDead;
     }
 
     public bool HasLeaderMoved(Team team)
     {
-        if (team == Team.White)
-        {
-            return whiteModels[2].Moved;
-        }
-        else
-        {
-            return redModels[2].Moved;
-        }
+        var models = team == Team.White ? whiteModels : redModels;
+        ref ShortUnitModel leader = ref models[2];
+
+        return leader.Moved;
     }
 
     private int GetUnitModelIndex(UnitModel unit)
@@ -549,29 +198,36 @@ public struct ShortFieldModel
 
     private void Move(UnitModel unit, int x, int y)
     {
-        var model = GetUnitModel(unit);
+        ref ShortUnitModel model = ref GetUnitModel(unit);
 
         bool wasFree = true;
         if (shortField[x, y].IsOccupied)
             wasFree = false;
 
-        shortField[model.Pos.x, model.Pos.y].Free();
-        if (shortField[model.Pos.x, model.Pos.y].IsOccupied)
+        ref ShortTileModel prevTile = ref shortField[model.Pos.x, model.Pos.y];
+
+        //shortField[model.Pos.x, model.Pos.y].Free();
+        prevTile.Free();
+        if (prevTile.IsOccupied)
         {
             var models = unit.Team == Team.White ? redModels : whiteModels;
 
             for (int i = 0; i < models.Length; i++)
             {
-                if (models[i].Pos == model.Pos)
+                ref ShortUnitModel otherModel = ref models[i];
+
+                if (otherModel.Pos == model.Pos)
                 {
-                    models[i].IsPosOwner = true;
+                    otherModel.IsPosOwner = true;
 
                     break;
                 }
             }
         }
 
-        shortField[x, y].Occupy(unit);
+        ref ShortTileModel nextTile = ref shortField[x, y];
+        nextTile.Occupy(unit);
+        //shortField[x, y].Occupy(unit);
 
         int index = GetUnitModelIndex(unit);
 
@@ -579,10 +235,11 @@ public struct ShortFieldModel
         {
             if (item == ItemType.Empty)
             {
-                item = shortField[x, y].Tile.ItemType;
+                item = nextTile.Tile.ItemType;
                 tookItem = unit.Team;
 
                 //if (model.IsDead == false)
+                if (item != ItemType.Empty)
                     TakeItemReacton(item, unit);
             }
             else if (item == ItemType.Teleport && tookItem == unit.Team)
@@ -592,76 +249,45 @@ public struct ShortFieldModel
             }
         }
 
-        if (unit.Team == Team.White)
-        {
-            whiteModels[index].SetPos(x, y);
-            if (shortField[x, y].IsCharged)
-                whiteModels[index].Charge();
-            //if (wasFree)
-            whiteModels[index].IsPosOwner = wasFree;
-        }
-        else
-        {
-            redModels[index].SetPos(x, y);
-            if (shortField[x, y].IsCharged)
-                redModels[index].Charge();
+        model.SetPos(x, y);
 
-            redModels[index].IsPosOwner = wasFree;
-        }
+        if (nextTile.IsCharged)
+            model.Charge();
 
-        shortField[x, y].DropCharge();
+        model.IsPosOwner = wasFree;
+
+        nextTile.DropCharge();
     }
 
     private void TakeItemReacton(ItemType item, UnitModel taker)
     {
-        int index = 0;
+        //int index = 0;
+        ref ShortUnitModel takerModel = ref GetUnitModel(taker);
+
         switch (item)
         {
             case ItemType.Heal:
-                var takerModel = GetUnitModel(taker);
                 if (takerModel.IsDead)
-                {
                     break;
-                }
 
-                var leader = GetUnitModel(taker.Leader);
-                index = GetUnitModelIndex(taker.Leader);
-
+                ref ShortUnitModel leader = ref GetUnitModel(taker.Leader);
                 leader.Heal(1);
                 leader.Poison(false);
-
-                if (taker.Team == Team.White)
-                    whiteModels[index] = leader;
-                else
-                    redModels[index] = leader;
-
                 usedItem = true;
                 break;
 
             case ItemType.Shield:
-                var model = GetUnitModel(taker);
-                index = GetUnitModelIndex(taker);
-
-                model.SetShield(true);
-
-                if (taker.Team == Team.White)
-                    whiteModels[index] = model;
-                else
-                    redModels[index] = model;
-
+                takerModel.SetShield(true);
                 usedItem = true;
                 break;
 
             case ItemType.Charger:
-                if (taker.Team == Team.White)
+                var models = taker.Team == Team.White ? whiteModels : redModels;
+
+                for (int i = 0; i < models.Length; i++)
                 {
-                    for (int i = 0; i < whiteModels.Length; i++)
-                        whiteModels[i].Charge();
-                }
-                else
-                {
-                    for (int i = 0; i < redModels.Length; i++)
-                        redModels[i].Charge();
+                    ref ShortUnitModel model = ref models[i];
+                    model.Charge();
                 }
 
                 usedItem = true;
@@ -669,24 +295,27 @@ public struct ShortFieldModel
         }
     }
 
-    public List<ShortMoveModel> GetMoves(Team team, UnitModel mover = null)
+    public List<ShortMoveModel> GetMoves(Team team, List<ShortMoveModel> moveVariants, UnitModel executor = null)
     {
         var movers = team == Team.White ? whiteModels : redModels;
         var targets = team == Team.Red ? whiteModels : redModels;
-        var moveVariants = new List<ShortMoveModel>();
+        //var moveVariants = new List<ShortMoveModel>();
+        moveVariants.Clear();
 
         for (int i = 0; i < movers.Length; i++)
         {
-            if (mover != null)
+            if (executor != null)
             {
-                if (movers[i].Unit != mover)
+                if (movers[i].Unit != executor)
                     continue;
             }
 
+            ref ShortUnitModel mover = ref movers[i];
+
             //Moves
 
-            List<TileModel> tiles = shortField[movers[i].Pos.x, movers[i].Pos.y].Tile.MoveTiles;
-            if (item == ItemType.Teleport && !usedItem && tookItem == movers[i].Unit.Team)
+            List<TileModel> tiles = shortField[mover.Pos.x, mover.Pos.y].Tile.MoveTiles;
+            if (item == ItemType.Teleport && !usedItem && tookItem == mover.Unit.Team)
                 tiles = tiles[0].FieldTiles;
             foreach (var tile in tiles) 
             {
@@ -720,12 +349,12 @@ public struct ShortFieldModel
                         continue;
                 }
 
-                if (shortField[movers[i].Pos.x, movers[i].Pos.y].Tile.IsPortal)
+                if (shortField[mover.Pos.x, mover.Pos.y].Tile.IsPortal)
                 {
                     if (tile.IsPortal)
                         continue;
 
-                    if (movers[i].IsCharged == false)
+                    if (mover.IsCharged == false)
                     {
                         if (tile.IsCharged == false)
                             if (tile.ItemType == ItemType.Empty)
@@ -733,7 +362,7 @@ public struct ShortFieldModel
                     }
                 }
 
-                if (movers[i].Personality.IsOfCenterAllowed() == false)
+                if (mover.Personality.IsOfCenterAllowed() == false)
                 {
                     if (tile.IsPortal == false)
                     {
@@ -747,15 +376,15 @@ public struct ShortFieldModel
                 moveVariants.Add(
                     new ShortMoveModel(
                         MoveType.Move, 
-                        movers[i].Unit, 
+                        mover.Unit, 
                         tile, 
-                        shortField[movers[i].Pos.x, movers[i].Pos.y].Tile));
+                        shortField[mover.Pos.x, mover.Pos.y].Tile));
             }
 
             //Respawn
-            if (movers[i].Personality.UnitType == UnitType.Default && movers[i].Unit.IsRespawnable 
+            if (mover.Personality.UnitType == UnitType.Default && mover.Unit.IsRespawnable 
                 || 
-                movers[i].Unit.Health < movers[i].Unit.TrueHealth && movers[i].Respawned == false && movers[i].IsCharged)
+                mover.Unit.Health < mover.Unit.TrueHealth && mover.Respawned == false && mover.IsCharged) //TODO: Uncomment if charge required to heal
             {
                 //if (movers[i].Unit.IsRespawnable || movers[i].Unit.Health < movers[i].Unit.TrueHealth)
                 //{
@@ -763,14 +392,14 @@ public struct ShortFieldModel
                 moveVariants.Add(
                     new ShortMoveModel(
                         MoveType.Respawn,
-                        movers[i].Unit,
-                        movers[i].Unit.Position,
-                        shortField[movers[i].Pos.x, movers[i].Pos.y].Tile));
+                        mover.Unit,
+                        mover.Unit.Position,
+                        shortField[mover.Pos.x, mover.Pos.y].Tile));
                 //}
             }
 
             //Attacks & Abilities
-            if (movers[i].IsCharged)
+            if (mover.IsCharged)
             {
                 //Attack
                 for (int j = 0; j < targets.Length; j++)
@@ -778,15 +407,15 @@ public struct ShortFieldModel
                     moveVariants.Add(
                         new ShortMoveModel(
                             MoveType.Attack,
-                            movers[i].Unit,
+                            mover.Unit,
                             shortField[targets[j].Pos.x, targets[j].Pos.y].Tile,
-                            shortField[movers[i].Pos.x, movers[i].Pos.y].Tile,
+                            shortField[mover.Pos.x, mover.Pos.y].Tile,
                             targets[j].Unit));
                     
                 }
 
                 //Ability
-                if (movers[i].Unit.UnitType == UnitType.Shield)
+                if (mover.Unit.UnitType == UnitType.Shield)
                 {
                     for (int j = 0; j < movers.Length; j++)
                     {
@@ -804,9 +433,9 @@ public struct ShortFieldModel
                         moveVariants.Add(
                             new ShortMoveModel(
                                 MoveType.Ability,
-                                movers[i].Unit,
+                                mover.Unit,
                                 shortField[movers[j].Pos.x, movers[j].Pos.y].Tile,
-                                shortField[movers[i].Pos.x, movers[i].Pos.y].Tile,
+                                shortField[mover.Pos.x, mover.Pos.y].Tile,
                                 movers[j].Unit));
                     }
                 }
@@ -816,33 +445,37 @@ public struct ShortFieldModel
         return moveVariants;
     }
 
-    public List<ShortMoveModel> GetMoves(Team team, MoveFilter filter, bool allowOfCenter)
+    public List<ShortMoveModel> GetMoves(Team team, MoveFilter filter, bool allowOfCenter, List<ShortMoveModel> moveVariants)
     {
         var movers = team == Team.White ? whiteModels : redModels;
         var targets = team == Team.Red ? whiteModels : redModels;
-        var moveVariants = new List<ShortMoveModel>();
+
+        moveVariants.Clear();
+        //var moveVariants = new List<ShortMoveModel>();
 
         for (int i = 0; i < movers.Length; i++)
         {
+            ref ShortUnitModel mover = ref movers[i];
+
             if (filter.Executor != null)
             {
-                if (filter.IsExecutor(movers[i].Unit) == false)
+                if (filter.IsExecutor(mover.Unit) == false)
                 {
                     continue;
                 }
             }
 
-            if (movers[i].Unit.Locked)
+            if (mover.Unit.Locked)
                 continue;
 
             //Moves
 
-            List<TileModel> tiles = shortField[movers[i].Pos.x, movers[i].Pos.y].Tile.MoveTiles;
+            List<TileModel> tiles = shortField[mover.Pos.x, mover.Pos.y].Tile.MoveTiles;
             //if (item == ItemType.Teleport && !usedItem && tookItem == movers[i].Unit.Team)
             //    tiles = tiles[0].FieldTiles;
-            if (shortField[movers[i].Pos.x, movers[i].Pos.y].Tile.IsPortal && team == Team.Red)
+            if (shortField[mover.Pos.x, mover.Pos.y].Tile.IsPortal && team == Team.Red)
             {
-                var currentTile = shortField[movers[i].Pos.x, movers[i].Pos.y].Tile;
+                var currentTile = shortField[mover.Pos.x, mover.Pos.y].Tile;
 
                 tiles = new List<TileModel>();
                 tiles.AddRange(currentTile.MeleeTiles);
@@ -890,11 +523,13 @@ public struct ShortFieldModel
                         continue;
                 }
 
-                if (shortField[movers[i].Pos.x, movers[i].Pos.y].Tile.IsPortal)
+                ref ShortTileModel moverTile = ref shortField[mover.Pos.x, mover.Pos.y];
+
+                if (moverTile.Tile.IsPortal)
                     if (tile.IsPortal)
                         continue;
 
-                if (movers[i].Personality.IsOfCenterAllowed() == false)
+                if (mover.Personality.IsOfCenterAllowed() == false)
                 {
                     if (allowOfCenter == false && tile.IsPortal == false)
                     {
@@ -907,27 +542,27 @@ public struct ShortFieldModel
 
                 var moveVariant = new ShortMoveModel(
                         MoveType.Move,
-                        movers[i].Unit,
+                        mover.Unit,
                         tile,
-                        shortField[movers[i].Pos.x, movers[i].Pos.y].Tile);
+                        shortField[mover.Pos.x, mover.Pos.y].Tile);
 
                 if (filter.Match(moveVariant))
                     moveVariants.Add(moveVariant);
             }
 
             //Respawn
-            if (movers[i].Personality.UnitType == UnitType.Default && movers[i].Unit.IsRespawnable
+            if (mover.Personality.UnitType == UnitType.Default && mover.Unit.IsRespawnable
                 ||
-                movers[i].Unit.Health < movers[i].Unit.TrueHealth && movers[i].Respawned == false && movers[i].IsCharged)
+                mover.Unit.Health < mover.Unit.TrueHealth && mover.Respawned == false && mover.IsCharged) //TODO: Uncomment if charge required to heal
             {
                 //if (movers[i].Unit.IsRespawnable)
                 //{
                     //if (movers[i].Personality.UnitType == UnitType.Default)
                 var moveVariant = new ShortMoveModel(
                         MoveType.Respawn,
-                        movers[i].Unit,
-                        movers[i].Unit.Position,
-                        shortField[movers[i].Pos.x, movers[i].Pos.y].Tile);
+                        mover.Unit,
+                        mover.Unit.Position,
+                        shortField[mover.Pos.x, mover.Pos.y].Tile);
 
                 if (filter.Match(moveVariant))
                     moveVariants.Add(moveVariant);
@@ -944,7 +579,7 @@ public struct ShortFieldModel
                             MoveType.Attack,
                             movers[i].Unit,
                             shortField[targets[j].Pos.x, targets[j].Pos.y].Tile,
-                            shortField[movers[i].Pos.x, movers[i].Pos.y].Tile,
+                            shortField[mover.Pos.x, mover.Pos.y].Tile,
                             targets[j].Unit);
 
                     if (filter.Match(moveVariant))
@@ -953,7 +588,7 @@ public struct ShortFieldModel
                 }
 
                 //Ability
-                if (movers[i].Unit.UnitType == UnitType.Shield)
+                if (mover.Unit.UnitType == UnitType.Shield)
                 {
                     for (int j = 0; j < movers.Length; j++)
                     {
@@ -965,9 +600,9 @@ public struct ShortFieldModel
 
                         var moveVariant = new ShortMoveModel(
                                 MoveType.Ability,
-                                movers[i].Unit,
+                                mover.Unit,
                                 shortField[movers[j].Pos.x, movers[j].Pos.y].Tile,
-                                shortField[movers[i].Pos.x, movers[i].Pos.y].Tile,
+                                shortField[mover.Pos.x, mover.Pos.y].Tile,
                                 movers[j].Unit);
 
                         if (filter.Match(moveVariant))
@@ -985,47 +620,56 @@ public struct ShortFieldModel
         //var leaderW = GetUnitModel(whiteModels[0].Unit.totem.Leader);
         //var leaderR = GetUnitModel(redModels[0].Unit.totem.Leader);
 
-        int leaderIndexW = GetUnitModelIndex(whiteModels[0].Unit.Leader);
-        int leaderIndexR = GetUnitModelIndex(redModels[0].Unit.Leader);
+        int leaderIndexW = 2;
+        int leaderIndexR = 2;
+
+        ref ShortUnitModel leaderW = ref whiteModels[leaderIndexW];
+        ref ShortUnitModel leaderR = ref redModels[leaderIndexR];
 
         //Collision Fight
         for (int i = 0; i < whiteModels.Length; i++)
         {
+            ref ShortUnitModel wm = ref whiteModels[i];
+            if (wm.IsDead)
+                continue;
+
             for (int j = 0; j < whiteModels.Length; j++)
             {
-                if (whiteModels[i].IsDead)
-                    continue;
-                if (redModels[j].IsDead)
+                ref ShortUnitModel rm = ref redModels[j];
+                if (rm.IsDead)
                     continue;
 
-                if (whiteModels[i].Pos.x == redModels[j].Pos.x && whiteModels[i].Pos.y == redModels[j].Pos.y)
+                if (wm.Pos.x == rm.Pos.x && wm.Pos.y == rm.Pos.y)
                 {
-                    if (redModels[j].IsCharged)
+                    if (rm.IsCharged)
                     {
-                        if (whiteModels[i].HasShield)
-                            whiteModels[i].SetShield(false);
+                        if (wm.HasShield)
+                            wm.SetShield(false);
                         else
-                            whiteModels[i].TakeDamage(redModels[j].Damage);
+                            wm.TakeDamage(rm.Damage);
                     }
-                    if (whiteModels[i].IsCharged)
+                    if (wm.IsCharged)
                     {
-                        if (redModels[j].HasShield)
-                            redModels[j].SetShield(false);
+                        if (rm.HasShield)
+                            rm.SetShield(false);
                         else
-                            redModels[j].TakeDamage(whiteModels[i].Damage);
+                           rm.TakeDamage(wm.Damage);
                     }
 
-                    var models = redModels[j].IsPosOwner ? whiteModels : redModels;
-                    int index = redModels[j].IsPosOwner ? i : j;
-                    var pos = GetJumpPosClockwise(models[index].Pos);
-                    var posFrom = models[index].Pos;
+                    var models = rm.IsPosOwner ? whiteModels : redModels;
+                    int index = rm.IsPosOwner ? i : j;
+                    ref ShortUnitModel refModel = ref models[index];
+
+                    var pos = GetJumpPosClockwise(refModel.Pos);
+                    var posFrom = refModel.Pos;
+
                     if (shortField[pos.x, pos.y].Tile.IsSuddenDeathTarget && 
                         shortField[posFrom.x, posFrom.y].Tile.IsSuddenDeathTarget == false)
                     {
-                        if (models[index].HasShield)
-                            models[index].SetShield(false);
+                        if (refModel.HasShield)
+                            refModel.SetShield(false);
                         else
-                            models[index].TakeDamage(1);
+                            refModel.TakeDamage(1);
                     }
                 }
             }
@@ -1034,32 +678,35 @@ public struct ShortFieldModel
         //SuddenDeath Damage & afterdamage
         for (int i = 0; i < whiteModels.Length; i++)
         {
-            whiteModels[i].AfterDamage();
-            redModels[i].AfterDamage();
+            ref ShortUnitModel wm = ref whiteModels[i];
+            ref ShortUnitModel rm = ref redModels[i];
 
-            if (shortField[whiteModels[i].Pos.x, whiteModels[i].Pos.y].Tile.IsSuddenDeathTarget)
+            wm.AfterDamage();
+            rm.AfterDamage();
+
+            if (shortField[wm.Pos.x, wm.Pos.y].Tile.IsSuddenDeathTarget)
             {
-                if (whiteModels[i].HasShield)
-                    redModels[i].SetShield(false);
+                if (wm.HasShield)
+                    wm.SetShield(false);
                 else
-                    whiteModels[i].TakeDamage(1);
+                    wm.TakeDamage(1);
             }
-            if (shortField[redModels[i].Pos.x, redModels[i].Pos.y].Tile.IsSuddenDeathTarget)
+            if (shortField[rm.Pos.x, rm.Pos.y].Tile.IsSuddenDeathTarget)
             {
-                if (redModels[i].HasShield)
-                    redModels[i].SetShield(false);
+                if (rm.HasShield)
+                    rm.SetShield(false);
                 else
-                    redModels[i].TakeDamage(1);
+                    rm.TakeDamage(1);
             }
 
-            if (whiteModels[i].Personality.UnitType == UnitType.Venomancer)
+            if (wm.Personality.UnitType == UnitType.Venomancer)
             {
-                if (whiteModels[i].IsCharged || whiteModels[i].IsDead)
+                if (wm.IsCharged || wm.IsDead)
                 {
                     for (int j = 0; j < redModels.Length; j++)
                     {
-                        if (Mathf.Abs(redModels[j].Pos.x - whiteModels[i].Pos.x) <= 1 &&
-                            Mathf.Abs(redModels[j].Pos.y - whiteModels[i].Pos.y) <= 1 &&
+                        if (Mathf.Abs(redModels[j].Pos.x - wm.Pos.x) <= 1 &&
+                            Mathf.Abs(redModels[j].Pos.y - wm.Pos.y) <= 1 &&
                             redModels[j].Pos != whiteModels[i].Pos)
                         {
                             redModels[j].Poison(true);
@@ -1070,13 +717,13 @@ public struct ShortFieldModel
             }
             if (redModels[i].Personality.UnitType == UnitType.Venomancer)
             {
-                if (redModels[i].IsCharged || redModels[i].IsDead)
+                if (rm.IsCharged || rm.IsDead)
                 {
                     for (int j = 0; j < redModels.Length; j++)
                     {
-                        if (Mathf.Abs(whiteModels[j].Pos.x - redModels[i].Pos.x) <= 1 &&
-                            Mathf.Abs(whiteModels[j].Pos.y - redModels[i].Pos.y) <= 1 &&
-                            whiteModels[j].Pos != redModels[i].Pos)
+                        if (Mathf.Abs(whiteModels[j].Pos.x - rm.Pos.x) <= 1 &&
+                            Mathf.Abs(whiteModels[j].Pos.y - rm.Pos.y) <= 1 &&
+                            whiteModels[j].Pos != rm.Pos)
                         {
                             whiteModels[j].Poison(true);
                         }
@@ -1090,31 +737,47 @@ public struct ShortFieldModel
         //Respawn Damage
         for (int i = 0; i < whiteModels.Length; i++)
         {
-            if (whiteModels[i].Unit != whiteModels[leaderIndexW].Unit)
+
+            ref ShortUnitModel wm = ref whiteModels[i];
+            if (wm.Unit != leaderW.Unit && wm.IsDead)
             {
-                if (whiteModels[i].IsDead)
-                {
-                    whiteModels[leaderIndexW].LeaderRespawnDamage(1);
-                }
+                leaderW.LeaderRespawnDamage(1);
             }
-            if (redModels[i].Unit != redModels[leaderIndexR].Unit)
+
+            ref ShortUnitModel rm = ref redModels[i];
+            if (rm.Unit != leaderR.Unit && rm.IsDead)
             {
-                if (redModels[i].IsDead)
-                {
-                    redModels[leaderIndexR].LeaderRespawnDamage(1);
-                }
+                leaderR.LeaderRespawnDamage(1);
             }
+
+            //if (whiteModels[i].Unit != whiteModels[2].Unit)
+            //{
+            //    if (whiteModels[i].IsDead)
+            //    {
+            //        whiteModels[leaderIndexW].LeaderRespawnDamage(1);
+            //    }
+            //}
+            //if (redModels[i].Unit != redModels[leaderIndexR].Unit)
+            //{
+            //    if (redModels[i].IsDead)
+            //    {
+            //        redModels[leaderIndexR].LeaderRespawnDamage(1);
+            //    }
+            //}
         }
     }
 
     private void UseAbility(UnitModel user, UnitModel targetUnit)
     {
-        var model = GetUnitModel(user);
-        var target = GetUnitModel(targetUnit);
+        ref ShortUnitModel model = ref GetUnitModel(user);
+        ref ShortUnitModel target = ref GetUnitModel(targetUnit);
+
+        //ref ShortTileModel targetTile = ref shortField[target.Pos.x, target.Pos.y];
+        ref ShortTileModel modelTile = ref shortField[model.Pos.x, model.Pos.y];
 
         if (item != ItemType.Infinity || usedItem == true) //Causes shield not dropping charge
         {
-            shortField[model.Pos.x, model.Pos.y].DropCharge();
+            modelTile.DropCharge();
             model.DropCharge();
         }
         else if (tookItem == user.Team)
@@ -1123,7 +786,7 @@ public struct ShortFieldModel
         }
         else
         {
-            shortField[model.Pos.x, model.Pos.y].DropCharge();
+            modelTile.DropCharge();
             model.DropCharge();
         }
         //shortField[model.Pos.x, model.Pos.y].DropCharge();
@@ -1134,11 +797,6 @@ public struct ShortFieldModel
 
         if (model.IsDead)
         {
-            if (model.Unit.Team == Team.White)
-                whiteModels[index] = model;
-            else
-                redModels[index] = model;
-
             return;
         }
 
@@ -1147,53 +805,27 @@ public struct ShortFieldModel
             target.SetShield(true);
         }
 
-        if (target.Unit.Team == Team.White)
+        if (user == targetUnit)
         {
-            if (user == targetUnit)
-            {
-                target.DropCharge();
-                whiteModels[targetIndex] = target;
-            }
-            else
-            {
-                whiteModels[index] = model;
-                whiteModels[targetIndex] = target;
-            }
-        }
-        else
-        {
-            if (user == targetUnit) 
-            {
-                target.DropCharge();
-                redModels[targetIndex] = target;
-            }
-            else
-            {
-                redModels[index] = model;
-                redModels[targetIndex] = target;
-            }
+            target.DropCharge();
         }
     }
 
     private void Respawn(UnitModel respawner)
     {
-        var model = GetUnitModel(respawner);
+        ref ShortUnitModel model = ref GetUnitModel(respawner);
+        ref ShortTileModel tile = ref shortField[model.Pos.x, model.Pos.y];
 
-        shortField[model.Pos.x, model.Pos.y].DropCharge();
+        tile.DropCharge();
+        //shortField[model.Pos.x, model.Pos.y].DropCharge();
         //model.DropCharge();
 
+        ShortUnitModel[] models = respawner.Team == Team.White ? whiteModels : redModels;
         int index = GetUnitModelIndex(respawner);
 
         if (model.Personality.UnitType == UnitType.Default && model.Unit.IsRespawnable)
         {
-            if (respawner.Team == Team.White)
-            {
-                whiteModels[index] = model.IsDead ? new ShortUnitModel(model, true) : new ShortUnitModel(model);
-            }
-            else
-            {
-                redModels[index] = model.IsDead ? new ShortUnitModel(model, true) : new ShortUnitModel(model);
-            }
+            models[index] = model.IsDead ? new ShortUnitModel(model, true) : new ShortUnitModel(model);
         }
         else
         {
@@ -1205,68 +837,46 @@ public struct ShortFieldModel
 
             model.Respawned = true;
 
-            shortField[model.Pos.x, model.Pos.y].DropCharge();
             model.DropCharge();
 
-            if (respawner.Team == Team.White)
-            {
-                whiteModels[index] = model.IsDead ? new ShortUnitModel(model, true) : model;
-            }
-            else
-            {
-                redModels[index] = model.IsDead ? new ShortUnitModel(model, true) : model;
-            }
+            models[index] = model.IsDead ? new ShortUnitModel(model, true) : model;
         }
     }
 
     private void Attack(UnitModel attacker, UnitModel targetUnit)
     {
-        var model = GetUnitModel(attacker);
-        var target = GetUnitModel(targetUnit);
+        ref ShortUnitModel model = ref GetUnitModel(attacker);
+        ref ShortUnitModel target = ref GetUnitModel(targetUnit);
 
-        shortField[model.Pos.x, model.Pos.y].DropCharge();
+        ref ShortTileModel attackerTile = ref shortField[model.Pos.x, model.Pos.y];
+        ref ShortTileModel targetTile = ref shortField[target.Pos.x, target.Pos.y];
+
+        //shortField[model.Pos.x, model.Pos.y].DropCharge(); actually not needed (tile discharged on unit enter)
         model.DropCharge();
 
-        int index = GetUnitModelIndex(attacker);
-        int targetIndex = GetUnitModelIndex(target.Unit);
+        //int index = GetUnitModelIndex(attacker);
+        //int targetIndex = GetUnitModelIndex(target.Unit);
 
 
         if (model.IsDead)
         {
-            if (model.Unit.Team == Team.White)
-                whiteModels[index] = model;
-            else
-                redModels[index] = model;
-
             return;
         }
         else if (
-            shortField[model.Pos.x, model.Pos.y].Tile.MeleeTiles.Contains(
-                        shortField[target.Pos.x, target.Pos.y].Tile) == false &&
-            //shortField[model.Pos.x, model.Pos.y].Tile.RangeTiles.Contains(
-            //            shortField[target.Pos.x, target.Pos.y].Tile) == false &&
-            shortField[model.Pos.x, model.Pos.y].Tile !=
-                        shortField[target.Pos.x, target.Pos.y].Tile)
+            attackerTile.Tile.MeleeTiles.Contains(
+                        targetTile.Tile) == false &&
+            attackerTile.Tile !=
+                        targetTile.Tile)
         {
-            if (shortField[model.Pos.x, model.Pos.y].Tile.RangeTiles.Contains(
-                        shortField[target.Pos.x, target.Pos.y].Tile) == false)
+            if (attackerTile.Tile.RangeTiles.Contains(
+                        targetTile.Tile) == false)
             {
-                if (model.Unit.Team == Team.White)
-                    whiteModels[index] = model;
-                else
-                    redModels[index] = model;
-
                 return;
             }
             else if (
                 model.IsRanger == false &&
                 (item == ItemType.Range && !usedItem && tookItem == attacker.Team) == false)
             {
-                if (model.Unit.Team == Team.White)
-                    whiteModels[index] = model;
-                else
-                    redModels[index] = model;
-
                 return;
             }
         }
@@ -1299,42 +909,26 @@ public struct ShortFieldModel
 
         if (item == ItemType.FireDamage && attacker.Team == tookItem && usedItem == false)
         {
+            var targets = target.Unit.Team == Team.White ? whiteModels : redModels;
             for (int i = 0; i < whiteModels.Length; i++)
             {
-                if (i == targetIndex)
+                //if (i == targetIndex)
+                //    continue;
+                if (targets[i].Unit == target.Unit)
                     continue;
 
-                if (target.Unit.Team == Team.White)
-                {
-                    if (whiteModels[i].HasShield)
-                        whiteModels[i].SetShield(false);
-                    else
-                        whiteModels[i].TakeDamage(1);
-                }
+                ref ShortUnitModel splashTarget = ref targets[i];
+
+                if (splashTarget.HasShield)
+                    splashTarget.SetShield(false);
                 else
-                {
-                    if (redModels[i].HasShield)
-                        redModels[i].SetShield(false);
-                    else
-                        redModels[i].TakeDamage(1);
-                }
+                    splashTarget.TakeDamage(1);
             }
             usedItem = true;
         }
 
         if (item == ItemType.Range && !usedItem && tookItem == attacker.Team)
             usedItem = true;
-
-        if (target.Unit.Team == Team.White)
-        {
-            whiteModels[targetIndex] = target;
-            redModels[index] = model;
-        }
-        else
-        {
-            redModels[targetIndex] = target;
-            whiteModels[index] = model;
-        }
     }
 
     //TODO: temp solution rework for all team effects

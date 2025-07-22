@@ -240,6 +240,8 @@ public class BotController : MonoBehaviour
 
         tasks = new Task[lines.Count];
 
+        //var semaphore = new SemaphoreSlim(16);
+
         for (int i = 0; i < lines.Count; i++)
         {
             int i_0 = i;
@@ -247,8 +249,10 @@ public class BotController : MonoBehaviour
             if (RevealLocalUtil.Instance.IsSwitchable && redMoves == null)
                 surviveUntilReveal = true;
 
-            tasks[i] = Task.Run(() =>
+            tasks[i] = Task.Run(//async 
+                () =>
             {
+                //await semaphore.WaitAsync();
                 int index = i_0;
                 bool saveAllCost = surviveUntilReveal;
 
@@ -282,8 +286,13 @@ public class BotController : MonoBehaviour
                     Interlocked.Increment(ref linesFailed);
                     Debug.LogError($"index = {index}; " +  e.ToString());
                 }
+                finally
+                {
+                    //semaphore.Release();
+                    Interlocked.Increment(ref linesDone);
+                }
 
-                Interlocked.Increment(ref linesDone);
+                //Interlocked.Increment(ref linesDone);
             });
         }
 
@@ -505,6 +514,8 @@ public class BotController : MonoBehaviour
         else if (RevealLocalUtil.Instance.IsSwitchable)
         {
             actionManager.roundManager.InvertBotCall = false;
+
+            EventCollector.Instance.Invoke(EventType.Reveal);
         }
     } 
 
