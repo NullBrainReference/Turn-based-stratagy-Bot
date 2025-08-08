@@ -1,13 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEngine.UI.CanvasScaler;
 
 public struct ShortUnitModel
 {
-    private short health;
-    private short damage;
-    private short tookDamage;
+    private sbyte health;
+    private sbyte damage;
+    private sbyte tookDamage;
 
     private bool isCharged;
     private bool isLeader;
@@ -22,8 +21,8 @@ public struct ShortUnitModel
 
     private bool isPosOwner;
 
-    private short chargeStage;
-    private short chargeLimit;
+    private sbyte chargeStage;
+    private sbyte chargeLimit;
 
     private BotUnitPersonality _personality;
     private UnitModel _unit;
@@ -33,8 +32,8 @@ public struct ShortUnitModel
         _personality = personality;
         _unit = unit;
 
-        health = (short) unit.Health;
-        damage = (short) unit.Damage;
+        health = (sbyte) unit.Health;
+        damage = (sbyte) unit.Damage;
         isCharged = unit.IsCharged;
         hasShield = unit.HasShield;
         isPoisoned = unit.IsPoisoned;
@@ -45,8 +44,8 @@ public struct ShortUnitModel
         respawned = false;
         tookDamage = 0;
 
-        chargeLimit = (short)unit.ChargeLimit;
-        chargeStage = (short)unit.ChargeStage;
+        chargeLimit = (sbyte)unit.ChargeLimit;
+        chargeStage = (sbyte)unit.ChargeStage;
         
         isLeader = unit.IsLeader;
         pos = BotFieldModel.GetPos04(unit.Position.Xcoord, unit.Position.Ycoord);
@@ -64,7 +63,7 @@ public struct ShortUnitModel
         _unit = original.Unit;
         _personality = BotUnitPersonality.GetUnitPersonality(_unit.SpawnerUnitType);
 
-        health = (short)original.Unit.TrueHealth;
+        health = (sbyte)original.Unit.TrueHealth;
         damage = 1; //TODO replace value with actual one
         tookDamage = 0;
 
@@ -117,8 +116,8 @@ public struct ShortUnitModel
     }
 
     public bool IsDead => health <= 0;
-    public short Health => health;
-    public short Damage => damage;
+    public sbyte Health => health;
+    public sbyte Damage => damage;
     public bool IsCharged => isCharged;
     public bool IsLeader => isLeader;
     public bool IsRanger => isRanger;
@@ -128,8 +127,8 @@ public struct ShortUnitModel
 
     //public bool IsRanger =>
 
-    public int ChargeStage => chargeStage;
-    public int ChargeLimit => chargeLimit;
+    public sbyte ChargeStage => chargeStage;
+    public sbyte ChargeLimit => chargeLimit;
 
     public bool Moved => moved;
     public bool Respawned { get => respawned; set => respawned = value; }
@@ -172,7 +171,7 @@ public struct ShortUnitModel
     public void Heal(int value)
     {
         isPoisoned = false;
-        health += (short)value;
+        health += (sbyte)value;
     }
 
     public void SetShield(bool value)
@@ -180,13 +179,13 @@ public struct ShortUnitModel
         hasShield = value;
     }
 
-    public void TakeDamage(short value)
+    public void TakeDamage(sbyte value)
     {
         health -= value;
         tookDamage += value;
     }
 
-    public void LeaderRespawnDamage(short value)
+    public void LeaderRespawnDamage(sbyte value)
     {
         if (moved == false)
             health -= value;

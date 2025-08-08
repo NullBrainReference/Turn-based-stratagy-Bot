@@ -48,7 +48,13 @@ public class MoveFilterCarousel
                     if (f2.HasChargeCollision(filter.Followup))
                         continue;
 
+                    if (f2.HasChargeCollision(filter)) //TODO: check if helps of breaks
+                        continue;
+
                     if (f2.IsUnreachibleFrom(filter))
+                        continue;
+
+                    if (f2.IsUnreachibleFrom(filter.Followup)) //TODO: check if helps of breaks
                         continue;
 
                     MoveFilter[] line = new MoveFilter[] { filter, filter.Followup, f2 };

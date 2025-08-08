@@ -278,8 +278,24 @@ public class BotController : MonoBehaviour
                     else
                         Interlocked.Increment(ref linesFailed);
 
+                    //var line = variansGenerator[index].GetBestLine(
+                    //    whiteModels,
+                    //    redModels,
+                    //    shortFieldModel,
+                    //    lines[index],
+                    //    redMoves,
+                    //    redActionsAssigned,
+                    //    saveAllCost
+                    //    );
 
-                    //linesDone++;
+                    //Debug.Log($"_bot picked value: {line.Item2}");
+
+                    //if (variansGenerator[index].Failed == false)
+                    //    bestLines[index] = line;
+                    //else
+                    //    Interlocked.Increment(ref linesFailed);
+
+
                 }
                 catch (Exception e)
                 {

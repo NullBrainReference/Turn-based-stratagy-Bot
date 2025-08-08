@@ -778,7 +778,8 @@ public struct ShortFieldModel
         if (item != ItemType.Infinity || usedItem == true) //Causes shield not dropping charge
         {
             modelTile.DropCharge();
-            model.DropCharge();
+            if (!modelTile.Tile.IsSuddenDeathTarget)
+                model.DropCharge();
         }
         else if (tookItem == user.Team)
         {
@@ -787,7 +788,8 @@ public struct ShortFieldModel
         else
         {
             modelTile.DropCharge();
-            model.DropCharge();
+            if (!modelTile.Tile.IsSuddenDeathTarget)
+                model.DropCharge();
         }
         //shortField[model.Pos.x, model.Pos.y].DropCharge();
         //model.DropCharge();
@@ -807,7 +809,8 @@ public struct ShortFieldModel
 
         if (user == targetUnit)
         {
-            target.DropCharge();
+            if (!modelTile.Tile.IsSuddenDeathTarget)
+                target.DropCharge();
         }
     }
 
@@ -837,7 +840,8 @@ public struct ShortFieldModel
 
             model.Respawned = true;
 
-            model.DropCharge();
+            if (!tile.Tile.IsSuddenDeathTarget)
+                model.DropCharge();
 
             models[index] = model.IsDead ? new ShortUnitModel(model, true) : model;
         }
@@ -852,7 +856,9 @@ public struct ShortFieldModel
         ref ShortTileModel targetTile = ref shortField[target.Pos.x, target.Pos.y];
 
         //shortField[model.Pos.x, model.Pos.y].DropCharge(); actually not needed (tile discharged on unit enter)
-        model.DropCharge();
+
+        if (!shortField[model.Pos.x, model.Pos.y].Tile.IsSuddenDeathTarget)
+            model.DropCharge();
 
         //int index = GetUnitModelIndex(attacker);
         //int targetIndex = GetUnitModelIndex(target.Unit);
@@ -886,7 +892,7 @@ public struct ShortFieldModel
         {
             if (item == ItemType.Rage && attacker.Team == tookItem && usedItem == false)
             {
-                target.TakeDamage((short)(model.Damage + 1));
+                target.TakeDamage((sbyte)(model.Damage + 1));
             }
             else
             {

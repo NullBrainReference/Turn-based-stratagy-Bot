@@ -150,9 +150,17 @@ public class ShieldPersonality : BotUnitPersonality, ICasterPersonality
             }
             else
             {
+                var chargedTile = unitModel.Position.MoveTiles.Find(x => x.IsBestChargeOption(unitModel.Position));
+
+                var distantTile = unitModel.Position.MoveTiles.Find(x => 
+                    x.IsBestDistantChargeOption(unitModel.Position, unitModel));
+
                 var filter = new MoveFilter(unitModel, x =>
                     x.MoveType == MoveType.Move &&
-                    x.Tile.IsCharged
+                    //x.Tile.IsCharged,
+                    x.Tile == chargedTile
+                    ,
+                    chargedTile
                     );
 
                 filters.Add(filter);
@@ -167,11 +175,34 @@ public class ShieldPersonality : BotUnitPersonality, ICasterPersonality
 
                 filter.Followup = followup;
 
+                if (distantTile != chargedTile)
+                {
+                    var altFilter = new MoveFilter(unitModel, x =>
+                        x.MoveType == MoveType.Move &&
+                        x.Tile == distantTile
+                        ,
+                        distantTile
+                        );
+
+                    altFilter.Priority = 1;
+                    altFilter.Followup = followup;
+
+                    filters.Add(altFilter);
+                }
+
                 if (field.mapManager.unitManager.WhiteUnits.Find(x => x.UnitType == UnitType.Poison) != null)
                 {
+                    chargedTile = unitModel.Position.MoveTiles.Find(x => x.IsBestChargeOption(unitModel.Position));
+
+                    distantTile = unitModel.Position.MoveTiles.Find(x =>
+                        x.IsBestDistantChargeOption(unitModel.Position, unitModel));
+
                     filter = new MoveFilter(unitModel, x =>
                         x.MoveType == MoveType.Move &&
-                        x.Tile.IsCharged
+                        //x.Tile.IsCharged
+                        x.Tile == chargedTile
+                        ,
+                        chargedTile
                         );
 
                     filters.Add(filter);
@@ -185,6 +216,21 @@ public class ShieldPersonality : BotUnitPersonality, ICasterPersonality
                         );
 
                     filter.Followup = followup;
+
+                    if (distantTile != chargedTile)
+                    {
+                        var altFilter = new MoveFilter(unitModel, x =>
+                            x.MoveType == MoveType.Move &&
+                            x.Tile == distantTile
+                            ,
+                            distantTile
+                            );
+
+                        altFilter.Priority = -1;
+                        altFilter.Followup = followup;
+
+                        filters.Add(altFilter);
+                    }
                 }
             }
         }

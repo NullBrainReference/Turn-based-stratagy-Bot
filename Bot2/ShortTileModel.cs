@@ -8,7 +8,7 @@ public struct ShortTileModel
     private bool _isCharged;
     private TileModel _tile;
 
-    private short occupantsCount;
+    private sbyte occupantsCount;
 
     public ShortTileModel(bool isSpace)
     {
@@ -48,6 +48,9 @@ public struct ShortTileModel
 
     public void DropCharge()
     {
+        if (_tile.IsSuddenDeathTarget)
+            return;
+
         _isCharged = false;
     }
 

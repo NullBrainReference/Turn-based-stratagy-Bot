@@ -133,11 +133,21 @@ public class BotUnitPersonality: IBotDanger, IMoveFilerSource
         {
             bool ofCenterAllowed = GetUnitPersonality(unitModel.UnitType).IsOfCenterAllowed();
 
+            //TODO: check if bad, remove if so and make free charge tile option for filter
+            var chargeTile = unitModel.Position.MoveTiles.Find(x => 
+                x.IsCharged && 
+                x.IsBestChargeOption(unitModel.Position) &&
+                ((x.Xcoord < 2 && x.Xcoord > -2 && x.Ycoord < 2 && x.Ycoord > -2) || ofCenterAllowed)
+                );
+
             var filter = new MoveFilter(unitModel, x =>
                 x.MoveType == MoveType.Move &&
-                x.Tile.IsCharged &&
-                x.Tile.IsBestChargeOption(x.TileFrom) &&
-                ((x.Tile.Xcoord < 2 && x.Tile.Xcoord > -2 && x.Tile.Ycoord < 2 && x.Tile.Ycoord > -2) || ofCenterAllowed)
+                x.Tile == chargeTile//TODO: check if bad, uncomment old if
+                //x.Tile.IsCharged &&
+                //x.Tile.IsBestChargeOption(x.TileFrom) &&
+                //((x.Tile.Xcoord < 2 && x.Tile.Xcoord > -2 && x.Tile.Ycoord < 2 && x.Tile.Ycoord > -2) || ofCenterAllowed)
+                ,
+                chargeTile //TODO: check if bad, remove if so and make free charge tile option for filter
                 );
 
             moveFilters.Add(filter);
@@ -219,6 +229,8 @@ public class BotUnitPersonality: IBotDanger, IMoveFilerSource
                     var followUp = new MoveFilter(unitModel, x =>
                         x.MoveType == MoveType.Move &&
                         x.Tile == retreatTile
+                        ,
+                        retreatTile //check if bad, remove if so and make free tile option for filter
                         );
 
                     filter.Followup = followUp;

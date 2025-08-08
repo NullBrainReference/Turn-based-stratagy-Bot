@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
+using System.Linq;
 using UnityEngine;
 
 public class BotVariansGenerator
@@ -226,6 +226,268 @@ public class BotVariansGenerator
         return (bestLine, worstDiff + bonus - leaderAbandonPunishment);
     }
 
+
+    /// <summary>
+    /// recursive gen with evaluation
+    /// </summary>
+    /// <param name="whiteUnits"></param>
+    /// <param name="redUnits"></param>
+    /// <param name="shortFieldModel"></param>
+    /// <param name="filters"></param>
+    /// <param name="redMoves"></param>
+    /// <param name="deathIsBad"></param>
+    /// <param name="saveAllCost"></param>
+    /// <returns></returns>
+    public (ShortMoveModel[], int) GetBestLine(
+        List<UnitModel> whiteUnits, List<UnitModel> redUnits,
+        ShortFieldModel shortFieldModel, 
+        MoveFilter[] filters, 
+        ShortMoveModel[] redMoves = null,
+        bool deathIsBad = false,
+        bool saveAllCost = false)
+    {
+        var worstFields = new Dictionary<string, ShortFieldModel>();
+        var worstDiffs = new Dictionary<string, int>();
+        var rms = new Dictionary<string, int>();
+
+        var moveVariants = new List<ShortMoveModel>();
+        //Gen part
+
+        if (redMoves == null)
+        {
+            ExploreRecursive(
+                shortFieldModel,
+                0,
+                6,
+                filters,
+                saveAllCost,
+                deathIsBad,
+                moveVariants,
+                worstFields,
+                worstDiffs,
+                rms);
+        }
+        else
+        {
+            ExploreRecursiveRedKnown(
+                shortFieldModel,
+                0,
+                6,
+                redMoves,
+                saveAllCost,
+                deathIsBad,
+                moveVariants,
+                worstFields,
+                worstDiffs,
+                rms
+            );
+        }
+
+        if (worstDiffs.Count <= 0)
+        {
+            failed = true;
+            pickedLine = null;
+            return (null, int.MinValue);
+        }
+
+        //Get best part
+        string bestKey = worstDiffs.Keys.First();
+
+        foreach (var pair in worstDiffs)
+        {
+            //Debug.Log($"_bot worst diff {pair.Key}: {worstDiffs[pair.Key]}");
+            if (worstDiffs[bestKey] > pair.Value)
+                continue;
+
+            //Debug.Log($"_bot passed: {bestKey}, value {worstDiffs[bestKey]}");
+            bestKey = pair.Key;
+        }
+
+        //Debug.Log($"_bot final in gen: {bestKey}, value {worstDiffs[bestKey]}");
+
+        int leaderAbandonPunishment = maxHealthLose * 12;
+
+        pickedLine = worstFields[bestKey].Moves;
+        return (worstFields[bestKey].Moves, worstDiffs[bestKey] - leaderAbandonPunishment);
+    }
+
+    private void ExploreRecursive(
+        ShortFieldModel current,
+        int depth,
+        int maxDepth,
+        MoveFilter[] filters,
+        bool saveAllCost,
+        bool deathIsBad,
+        List<ShortMoveModel> moveVariants,
+        Dictionary<string, ShortFieldModel> worstFields,
+        Dictionary<string, int> worstDiffs,
+        Dictionary<string, int> rms)
+    {
+        // Exit
+        if (depth >= maxDepth)
+        {
+            current.AfterMath();
+
+            string name = current.GetName();
+            int diff = current.GetMajorDifference(deathIsBad, saveAllCost);
+
+            if (!worstDiffs.ContainsKey(name) || worstDiffs[name] > diff)
+            {
+                worstDiffs[name] = diff;
+                worstFields[name] = current;
+                rms[name] = current.GetRealityMetric();
+            }
+            else if (worstDiffs[name] == diff)
+            {
+                int c_rm = current.GetRealityMetric();
+                if (rms[name] < c_rm)
+                {
+                    worstDiffs[name] = diff;
+                    worstFields[name] = current;
+                    rms[name] = c_rm;
+                }
+            }
+            return;
+        }
+
+        var team = depth % 2 == 0 ? Team.White : Team.Red;
+
+        List<ShortMoveModel> moves;
+        if (team == Team.White)
+        {
+            moves = current.GetMoves(
+                team,
+                filters[depth / 2],
+                allowOfCenter: saveAllCost,
+                moveVariants
+            );
+
+            if (depth == 2) //punishment for leader hp lose on move 1 after red response here its yet field 1-1
+            {
+                int healthLose = LeaderHealthLose(Team.White, ref current);
+                if (maxHealthLose <= healthLose)
+                    maxHealthLose = healthLose;
+            }
+        }
+        else
+        {
+            moves = current.GetMoves(team, moveVariants, null);
+        }
+
+        foreach (var move in moves)
+        {
+            ShortFieldModel nextField = current.GetNext(move);
+            ExploreRecursive(
+                nextField,
+                depth + 1,
+                maxDepth,
+                filters,
+                saveAllCost,
+                deathIsBad,
+                new List<ShortMoveModel>(),
+                worstFields,
+                worstDiffs,
+                rms
+            );
+        }
+    }
+
+    private void ExploreRecursiveRedKnown(
+        ShortFieldModel current,
+        int depth,
+        int maxDepth,
+        ShortMoveModel[] redMoves,
+        bool saveAllCost,
+        bool deathIsBad,
+        List<ShortMoveModel> moveVariants,
+        Dictionary<string, ShortFieldModel> worstFields,
+        Dictionary<string, int> worstDiffs,
+        Dictionary<string, int> rms)
+        {
+        // Exit
+        if (depth >= maxDepth)
+        {
+            current.AfterMath();
+
+            string name = current.GetName();
+            int diff = current.GetMajorDifference(deathIsBad, saveAllCost);
+
+            if (!worstDiffs.ContainsKey(name) || worstDiffs[name] < diff)
+            {
+                worstDiffs[name] = diff;
+                worstFields[name] = current;
+                rms[name] = current.GetRealityMetric();
+            }
+
+            //if (!worstDiffs.ContainsKey(name) || worstDiffs[name] > diff)
+            //{
+            //    worstDiffs[name] = diff;
+            //    worstFields[name] = current;
+            //    rms[name] = current.GetRealityMetric();
+            //}
+            //else if (worstDiffs[name] == diff)
+            //{
+            //    int c_rm = current.GetRealityMetric();
+            //    if (rms[name] < c_rm)
+            //    {
+            //        worstDiffs[name] = diff;
+            //        worstFields[name] = current;
+            //        rms[name] = c_rm;
+            //    }
+            //}
+            return;
+        }
+
+        var team = depth % 2 == 0 ? Team.White : Team.Red;
+
+        if (team == Team.White)
+        {
+            List<ShortMoveModel> moves = current.GetMoves(
+                team,
+                moveVariants,
+                null
+            );
+
+            foreach (var move in moves)
+            {
+                ShortFieldModel nextField = current.GetNext(move);
+                ExploreRecursiveRedKnown(
+                    nextField,
+                    depth + 1,
+                    maxDepth,
+                    redMoves,
+                    saveAllCost,
+                    deathIsBad,
+                    new List<ShortMoveModel>(),
+                    worstFields,
+                    worstDiffs,
+                    rms
+                );
+            }
+        }
+        else
+        {
+            var move = redMoves[depth / 2]; //d: 1/2 => 0; 3/2 => 1; 5/2 => 2
+            //moves = current.GetMoves(team, moveVariants, null);
+
+            //Debug.Log($"_bot depth: {depth}, d: {depth / 2}");
+
+            ShortFieldModel nextField = current.GetNext(move);
+            ExploreRecursiveRedKnown(
+                nextField,
+                depth + 1,
+                maxDepth,
+                redMoves,
+                saveAllCost,
+                deathIsBad,
+                new List<ShortMoveModel>(),
+                worstFields,
+                worstDiffs,
+                rms
+            );
+        }
+    }
+
     public void GetNextFields(List<ShortMoveModel> moves, ShortFieldModel shortFieldModel)
     {
         tmpFields = new ShortFieldModel[moves.Count];
@@ -368,6 +630,11 @@ public class BotVariansGenerator
         }
 
         return max;
+    }
+
+    private int LeaderHealthLose(Team team, ref ShortFieldModel field)
+    {
+        return field.LeaderHealthLose(team);
     }
 
     public static void Push(ActionManager actionManager, ShortMoveModel[] line)
